@@ -1,7 +1,12 @@
 # pip install -r requirements.txt
 
 fastapi
+fastapi[all]
+python-dotenv
+pydantic
 uvicorn
 opencv-python-headless
 numpy
 scipy
+python-multipart
+opencv-python
