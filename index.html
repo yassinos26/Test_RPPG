@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> RPPG Mesures Physiologiques</title>
+    <link rel="icon" href="favicon.ico" type="favicon.ico"> 
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        img.logo {
+            display: block;
+            margin: 0; /* Supprimer la marge pour le placer en haut à gauche */
+            width: 120px; /* Largeur fixe pour le logo */
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Espace accru entre les éléments */
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="number"], input[type="file"] {
+            padding: 10px; /* Augmenter le rembourrage */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            transition: border 0.3s; /* Transition pour le changement de bordure */
+        }
+        input[type="number"]:focus, input[type="file"]:focus {
+            border: 2px solid #01050a; /* Bordure bleue au focus */
+            outline: none; /* Supprimer l'outline par défaut */
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none; /* Corriger la bordure ici */
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.4s; /* Transition pour le bouton */
+        }
+        button:hover {
+            background-color: #00b35f;
+        }
+        .resultats-container {
+            margin-top: 20px;
+        }
+        #resultats {
+            font-size: 16px;
+            color: #333;
+        }
+        #webcamVideo {
+            width: 60%;
+            height: auto;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        #compteur {
+            font-size: 18px;
+            color: #684fd9;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <img src="logo.png" alt="Logo" class="logo"> 
+    <div class="container">
+        <h1>Face Mesure detection</h1>
+
+        <div class="form-container">
+            <label for="age">Age:</label>
+            <input type="number" id="age" placeholder="Entrer votre âge" required>
+
+            <label for="poids">Weight (kg):</label>
+            <input type="number" id="poids" placeholder="Entrer votre poids" required>
+
+            <label for="taille">Height (cm):</label>
+            <input type="number" id="taille" placeholder="Entrer votre taille" required>
+
+            <label for="video">Video:</label>
+            <input type="file" id="video" accept="video/*" required>
+
+            <label><input type="checkbox" id="webcamOption"> Use Webcam </label>
+            <video id="webcamVideo" hidden autoplay></video>
+            <div id="compteur"></div>
+            <button id="recordButton">Start Record</button>
+            <button id="sendVideoButton">Send Video</button>
+        </div>
+        <h2>Results</h2>
+        <pre id="resultats"></pre>
+    </div>
+
+    <script>
+        const webcamOption = document.getElementById('webcamOption');
+        const webcamVideo = document.getElementById('webcamVideo');
+        const recordButton = document.getElementById('recordButton');
+        const sendVideoButton = document.getElementById('sendVideoButton');
+        const compteurDiv = document.getElementById('compteur');
+        let recordedChunks = [];
+        let mediaRecorder;
+        let countdownTimer;
+        let countdown = 25;
+
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcamVideo.srcObject = stream;
+                webcamVideo.hidden = false;
+
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start();
+                startCountdown();
+            } catch (error) {
+                console.error("Erreur d'accès à la webcam:", error);
+            }
+        }
+
+        function startCountdown() {
+            countdown = 25;  
+            compteurDiv.textContent = `Il reste: ${countdown}s `;
+            clearInterval(countdownTimer); // Clear any existing timer to avoid overlap
+            countdownTimer = setInterval(() => {
+                countdown--;
+                compteurDiv.textContent = `Il reste: ${countdown}s `;
+                if (countdown < 0) {  // Change condition to stop at 0
+                    clearInterval(countdownTimer);
+                    stopRecording();
+                    alert("Vidéo prête, vous pouvez l'envoyer.");
+                }
+            }, 1000);
+        }
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                webcamVideo.srcObject.getTracks().forEach(track => track.stop());
+                webcamVideo.hidden = true;
+                compteurDiv.textContent = '';  
+            }
+        }
+
+        function saveRecordedVideo() {
+            if (recordedChunks.length > 0) {
+                const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+                console.log('Vidéo enregistrée.');
+                recordedChunks = [];
+                return videoBlob;
+            } else {
+                alert("Aucune vidéo enregistrée.");
+                return null;
+            }
+        }
+
+        recordButton.addEventListener('click', () => {
+            if (webcamOption.checked) {
+                // If already recording, stop and reset
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    stopRecording();
+                }
+                startWebcam();  // Start webcam recording
+            }
+        });
+
+        async function sendVideo() {
+            const formData = new FormData();
+            const ageInput = document.getElementById('age').value;
+            const poidsInput = document.getElementById('poids').value;
+            const tailleInput = document.getElementById('taille').value;
+
+            console.log(`Age: ${ageInput}, Weight: ${poidsInput}, Height: ${tailleInput}`);
+
+            formData.append('age', ageInput);
+            formData.append('weight', poidsInput);
+            formData.append('height', tailleInput);
+
+            if (ageInput.value > 120 || poidsInput.value > 150 || tailleInput.value > 200) {
+                console.error('Veuillez vérifier vos valeurs.!!!!');
+            }
+
+            if (webcamOption.checked) {
+                const videoBlob = saveRecordedVideo();
+                if (videoBlob) {
+                    console.log('La taille du Vidéo enregistrée :', videoBlob.size, 'octets');
+                    formData.append('video', videoBlob, 'webcam_video.mp4');
+                } else {
+                    return;
+                }
+            } else {
+                const videoInput = document.getElementById('video');
+                if (videoInput.files.length > 0) {
+                    console.log('Vidéo sélectionnée :', videoInput.files[0].name);
+                    formData.append('video', videoInput.files[0]);
+                } else {
+                    alert('Veuillez sélectionner une vidéo ou utiliser la webcam.');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/upload_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                console.log('les données sont :' , result);
+                document.getElementById('resultats').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                console.error('Erreur lors envoi de la vidéo:', error);
+            }
+        }
+        sendVideoButton.addEventListener('click', () => {
+            sendVideo();
+        });
+    </script>
+</body>
+</html>
