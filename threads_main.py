@@ -9,8 +9,8 @@ from vitals import (bandpass_filter, calculate_heart_rate, calculate_hrv, calcul
                     calculate_blood_pressure, calculate_spo2, verify_signal_strength, calculate_respiration_rate)
 
 # Paramètres de capture
-fs = 30  # Fréquence d'échantillonnage (frames par seconde)
-lowcut = 0.8  # Fréquence de coupure basse (Hz)
+fs = 15  # Fréquence d'échantillonnage (frames par seconde)
+lowcut = 0.85  # Fréquence de coupure basse (Hz)
 highcut = 2.5  # Fréquence de coupure haute (Hz)
 order = 4  # Ordre du filtre
 frame_idx = []
@@ -79,7 +79,7 @@ def process_vital_metrics(face_roi):
         signals["ppg_red_signal"].append(avg_red)  # Signal rouge
         signals["ppg_infra_signal"].append(avg_infra)  # Signal infrarouge
 
-        if len(signals["rppg_signal"]) > 33:
+        if len(signals["rppg_signal"]) > 27:
             filtered_signal = bandpass_filter(signals["rppg_signal"], lowcut, highcut, fs, order)
             bpm, peak_intervals, peaks = calculate_heart_rate(filtered_signal, fs)
             signals["heart_rates"].append(bpm)
