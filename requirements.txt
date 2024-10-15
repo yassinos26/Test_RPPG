@@ -1,12 +1,14 @@
 # pip install -r requirements.txt
+# fastapi
+# opencv-python-headless
+# python-multipart
+# fastapi[all]
+# python-dotenv
+# pydantic
+# uvicorn
 
-fastapi
-fastapi[all]
-python-dotenv
-pydantic
-uvicorn
-opencv-python-headless
+flask
+flask-cors
+opencv-python
 numpy
 scipy
-python-multipart
-opencv-python

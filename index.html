@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPPG Mesures Physiologiques</title>
+    <title> RPPG Mesures Physiologiques</title>
     <link rel="icon" href="favicon.ico" type="favicon.ico"> 
     <style>
         body {
@@ -25,37 +25,37 @@
         }
         img.logo {
             display: block;
-            margin: 0;
-            width: 120px;
+            margin: 0; /* Supprimer la marge pour le placer en haut à gauche */
+            width: 120px; /* Largeur fixe pour le logo */
         }
         .form-container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 15px; /* Espace accru entre les éléments */
         }
         label {
             font-weight: bold;
             color: #333;
         }
         input[type="number"], input[type="file"] {
-            padding: 10px;
+            padding: 10px; /* Augmenter le rembourrage */
             border: 1px solid #ddd;
             border-radius: 4px;
             width: 100%;
-            transition: border 0.3s;
+            transition: border 0.3s; /* Transition pour le changement de bordure */
         }
         input[type="number"]:focus, input[type="file"]:focus {
-            border: 2px solid #01050a;
-            outline: none;
+            border: 2px solid #01050a; /* Bordure bleue au focus */
+            outline: none; /* Supprimer l'outline par défaut */
         }
         button {
             background-color: #007BFF;
             color: white;
-            border: none;
+            border: none; /* Corriger la bordure ici */
             padding: 10px;
             border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.4s;
+            transition: background-color 0.4s; /* Transition pour le bouton */
         }
         button:hover {
             background-color: #00b35f;
@@ -133,6 +133,7 @@
                         recordedChunks.push(event.data);
                     }
                 };
+
                 mediaRecorder.start();
                 startCountdown();
             } catch (error) {
@@ -143,11 +144,11 @@
         function startCountdown() {
             countdown = 25;  
             compteurDiv.textContent = `Il reste: ${countdown}s `;
-            clearInterval(countdownTimer);
+            clearInterval(countdownTimer); // Clear any existing timer to avoid overlap
             countdownTimer = setInterval(() => {
                 countdown--;
                 compteurDiv.textContent = `Il reste: ${countdown}s `;
-                if (countdown < 0) {
+                if (countdown < 0) {  // Change condition to stop at 0
                     clearInterval(countdownTimer);
                     stopRecording();
                     alert("Vidéo prête, vous pouvez l'envoyer.");
@@ -178,10 +179,11 @@
 
         recordButton.addEventListener('click', () => {
             if (webcamOption.checked) {
+                // If already recording, stop and reset
                 if (mediaRecorder && mediaRecorder.state === "recording") {
                     stopRecording();
                 }
-                startWebcam();
+                startWebcam();  // Start webcam recording
             }
         });
 
@@ -197,35 +199,45 @@
             formData.append('weight', poidsInput);
             formData.append('height', tailleInput);
 
+            if (ageInput.value > 120 || poidsInput.value > 150 || tailleInput.value > 200) {
+                console.error('Veuillez vérifier vos valeurs.!!!!');
+            }
+
             if (webcamOption.checked) {
                 const videoBlob = saveRecordedVideo();
                 if (videoBlob) {
+                    console.log('La taille du Vidéo enregistrée :', videoBlob.size, 'octets');
                     formData.append('video', videoBlob, 'webcam_video.mp4');
                 } else {
                     return;
                 }
             } else {
-                const videoFile = document.getElementById('video').files[0];
-                if (videoFile) {
-                    formData.append('video', videoFile);
+                const videoInput = document.getElementById('video');
+                if (videoInput.files.length > 0) {
+                    console.log('Vidéo sélectionnée :', videoInput.files[0].name);
+                    formData.append('video', videoInput.files[0]);
                 } else {
-                    alert("Veuillez sélectionner un fichier vidéo.");
+                    alert('Veuillez sélectionner une vidéo ou utiliser la webcam.');
                     return;
                 }
             }
 
             try {
-                const response = await fetch('/upload_video', {
+                const response = await fetch('http://localhost:5000/upload_video', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
-                document.getElementById('resultats').textContent = JSON.stringify(data, null, 2);
+
+                const result = await response.json();
+                console.log('les données sont :' , result);
+                document.getElementById('resultats').textContent = JSON.stringify(result, null, 2);
             } catch (error) {
-                console.error("Erreur d'envoi:", error);
+                console.error('Erreur lors envoi de la vidéo:', error);
             }
         }
-        sendVideoButton.addEventListener('click', sendVideo);
+        sendVideoButton.addEventListener('click', () => {
+            sendVideo();
+        });
     </script>
 </body>
 </html>
