@@ -21,7 +21,7 @@ parts/
 sdist/
 var/
 wheels/
-conda/
+.conda/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
