@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPPG Physiology Mesures </title>
+    <link rel="icon" href="../static/favicon.ico" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <link rel="stylesheet" href="../static/style1.css">
+</head>
+<body>
+    <table width="100%" height="auto">
+        <tr width="100%" height="auto">
+            <td width="5%">
+                <div class="logo">
+                    <img src="../static/logo.png" alt="Logo">
+                </div>
+            </td>
+            <td width="90%" heigth="auto">
+                <header>
+                    <button class="back-button" style="background-color: transparent;" onclick="goBack()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-arrow-left-short" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"/>
+                        </svg>
+                    </button>
+                    <h1>Face Heart Vitals</h1>
+                </header>                        
+            </td>
+        </tr>
+    </table>
+
+    <div id="status">Status: Waiting connexion...</div>
+    <div id="container">
+        <canvas id="canvasInput" width="640" height="480"></canvas>  <!-- Canvas for video input -->
+        <canvas id="canvasOutput" width="640" height="480"></canvas>  <!-- Canvas for processed output -->
+        <video autoplay="true" id="videoElement" style="display:none;"></video> <!-- Hide the original video -->
+    </div>
+    
+    <!-- Result section to display backend information -->
+    <div id="metrics-container">
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%" height="auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Red" class="bi bi-heart-pulse-fill" viewBox="0 0 16 16">
+                            <path d="M1.475 9C2.702 10.84 4.779 12.871 8 15c3.221-2.129 5.298-4.16 6.525-6H12a.5.5 0 0 1-.464-.314l-1.457-3.642-1.598 5.593a.5.5 0 0 1-.945.049L5.889 6.568l-1.473 2.21A.5.5 0 0 1 4 9z"/>
+                            <path d="M.88 8C-2.427 1.68 4.41-2 7.823 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C11.59-2 18.426 1.68 15.12 8h-2.783l-1.874-4.686a.5.5 0 0 0-.945.049L7.921 8.956 6.464 5.314a.5.5 0 0 0-.88-.091L3.732 8z"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">Heart Rate</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="heart-rate-value">-</div>
+            <div class="metric-unit"><b>BPM</b></div>
+        </div>
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%" height="auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Red" class="bi bi-activity" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">HR Variability</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="hrv-value">-</div>
+            <div class="metric-unit"><b>MS</b></div>
+        </div>
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%" height="auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Red" viewBox="0 0 384 512">
+                            <path d="M192 512C86 512 0 426 0 320C0 228.8 130.2 57.7 166.6 11.7C172.6 4.2 181.5 0 191.1 0l1.8 0c9.6 0 18.5 4.2 24.5 11.7C253.8 57.7 384 228.8 384 320c0 106-86 192-192 192zM96 336c0-8.8-7.2-16-16-16s-16 7.2-16 16c0 61.9 50.1 112 112 112c8.8 0 16-7.2 16-16s-7.2-16-16-16c-44.2 0-80-35.8-80-80z"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">Blood Pressure</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="blood-pressure-value">-</div>
+            <div class="metric-unit"><b>mmHg</b></div>
+        </div>
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%" height="auto">
+                        <svg class="svg-icon"   width="30" height="30" style="vertical-align: middle;fill: red;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M366.709537 945.728364a294.327227 294.327227 0 0 1-45.927985-4.786861A297.561592 297.561592 0 0 1 68.630446 645.838029c0-53.043588 34.413645-138.430828 94.055338-246.717372 20.570562-34.672394 43.469867-71.414782 66.498548-108.415919 36.613013-55.372331 75.684144-112.94403 112.297157-165.987619a326.800253 326.800253 0 0 1 25.228048-32.343651c6.856854 9.185597 15.913076 20.699937 25.874921 32.343651 38.812382 53.043588 77.624763 108.415919 112.167783 165.987619 25.874921 36.871762 45.927985 73.743525 66.627921 108.415919a1222.719394 1222.719394 0 0 1 61.841061 122.129627 34.413645 34.413645 0 0 0 45.927985 18.500569 34.801769 34.801769 0 0 0 18.24182-46.186734 1322.596589 1322.596589 0 0 0-64.687303-129.374605c-21.734934-38.812382-44.763613-75.942893-68.697915-112.944031q-54.596083-85.904738-114.6259-168.186986c-13.843083-18.371194-27.427416-36.871762-38.812382-50.714846-4.657486-4.657486-6.856854-9.185597-11.51434-13.843082-2.199368-2.328743-2.199368-4.657486-4.657486-4.657486a34.28427 34.28427 0 0 0-54.984207 0l-4.657486 4.657486A60.417941 60.417941 0 0 1 323.498419 32.343651c-11.773089 16.042451-25.874921 32.343651-38.812382 50.714846-38.812382 55.372331-77.624763 110.615287-114.755275 168.186986q-36.095515 55.501706-68.697915 112.944031C36.674919 482.049779 0.061906 578.692609 0.061906 645.708654a368.846999 368.846999 0 0 0 309.464055 364.318889 437.286166 437.286166 0 0 0 57.183576 4.657485 34.54302 34.54302 0 0 0 0-68.956664z" fill="red"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">SPO2</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="spo2-value">-</div>
+            <div class="metric-unit"><b>%</b></div>
+        </div>
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%", height="auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Red" class="bi bi-lungs-fill" viewBox="0 0 16 16">
+                            <path d="M8 1a.5.5 0 0 1 .5.5v5.243L9 7.1V4.72C9 3.77 9.77 3 10.72 3c.524 0 1.023.27 1.443.592.431.332.847.773 1.216 1.229.736.908 1.347 1.946 1.58 2.48.176.405.393 1.16.556 2.011.165.857.283 1.857.24 2.759-.04.867-.232 1.79-.837 2.33-.67.6-1.622.556-2.741-.004l-1.795-.897A2.5 2.5 0 0 1 9 11.264V8.329l-1-.715-1 .715V7.214c-.1 0-.202.03-.29.093l-2.5 1.786a.5.5 0 1 0 .58.814L7 8.329v2.935A2.5 2.5 0 0 1 5.618 13.5l-1.795.897c-1.12.56-2.07.603-2.741.004-.605-.54-.798-1.463-.838-2.33-.042-.902.076-1.902.24-2.759.164-.852.38-1.606.558-2.012.232-.533.843-1.571 1.579-2.479.37-.456.785-.897 1.216-1.229C4.257 3.27 4.756 3 5.28 3 6.23 3 7 3.77 7 4.72V7.1l.5-.357V1.5A.5.5 0 0 1 8 1m3.21 8.907a.5.5 0 1 0 .58-.814l-2.5-1.786A.5.5 0 0 0 9 7.214V8.33z"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">Respiration Rate</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="respiration-value">-</div>
+            <div class="metric-unit"><b>BRpM</b></div>
+        </div>
+        <div class="metric-box">
+            <table>
+                <tr>
+                    <td width="20%" height="auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Red" viewBox="0 0 512 512">
+                            <path d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm177.6 62.1C192.8 334.5 218.8 352 256 352s63.2-17.5 78.4-33.9c9-9.7 24.2-10.4 33.9-1.4s10.4 24.2 1.4 33.9c-22 23.8-60 49.4-113.6 49.4s-91.7-25.5-113.6-49.4c-9-9.7-8.4-24.9 1.4-33.9s24.9-8.4 33.9 1.4zM144.4 208a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm192-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
+                        </svg>
+                    </td>
+                    <td width="10%"></td>
+                    <td width="70%" height="auto">
+                        <div class="metric-label">Stress Level</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="metric-value" id="stress-value">-</div>
+        </div>
+    </div>
+
+    <!--Canvas pour les resultats-->
+    <div class="container_results" id="container_result" >
+        <!-- Canvas pour le radar chart -->
+        <canvas id="radarChart" width="600" height="600"></canvas> 
+        <!-- Score section to display the physiological scores -->
+        <div id="scores-container">
+            <div class="score-box">
+                <table>
+                    <tr>
+                        <td width="20%" height="auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Green" class="bi bi-battery-full" viewBox="0 0 16 16">
+                                <path d="M2 6h10v4H2z"/>
+                                <path d="M2 4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm10 1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm4 3a1.5 1.5 0 0 1-1.5 1.5v-3A1.5 1.5 0 0 1 16 8"/>
+                            </svg>
+                        </td>
+                        <td width="80%" height="auto">
+                            <div class="score-label">Activity</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="score-value" id="activity-score">-</div>
+                <div class="score-status" id="activity_status"></div>
+            </div>
+            <div class="score-box">
+                <table>
+                    <tr>
+                        <td width="20%" height="auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="Green" width="30" height="30">
+                                <path d="M32 32c17.7 0 32 14.3 32 32l0 256 224 0 0-160c0-17.7 14.3-32 32-32l224 0c53 0 96 43 96 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-32-224 0-32 0L64 416l0 32c0 17.7-14.3 32-32 32s-32-14.3-32-32L0 64C0 46.3 14.3 32 32 32zm144 96a80 80 0 1 1 0 160 80 80 0 1 1 0-160z"/>
+                            </svg>
+                        </td>
+                        <td width="80%" height="auto">
+                            <div class="score-label">Sleep</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="score-value" id="sleep-score">-</div>
+                <div class="score-status" id="sleep_status"></div>
+            </div>
+            <div class="score-box">
+                <table>
+                    <tr>
+                        <td width="20%" height="auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Green" viewBox="0 0 640 512">
+                                <path d="M384 32l128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L398.4 96c-5.2 25.8-22.9 47.1-46.4 57.3L352 448l160 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-192 0-192 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l160 0 0-294.7c-23.5-10.3-41.2-31.6-46.4-57.3L128 96c-17.7 0-32-14.3-32-32s14.3-32 32-32l128 0c14.6-19.4 37.8-32 64-32s49.4 12.6 64 32zm55.6 288l144.9 0L512 195.8 439.6 320zM512 416c-62.9 0-115.2-34-126-78.9c-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1C627.2 382 574.9 416 512 416zM126.8 195.8L54.4 320l144.9 0L126.8 195.8zM.9 337.1c-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1C242 382 189.7 416 126.8 416S11.7 382 .9 337.1z"/>
+                            </svg>
+                        </td>
+                        <td width="80%" height="auto">
+                            <div class="score-label">Equilibre</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="score-value" id="equilibrium-score">-</div>
+                <div class="score-status" id="equilibrium_status"></div>
+            </div>
+            <div class="score-box">
+                <div>
+                    <table>
+                        <tr>
+                            <td width="20%" height="auto">
+                                <img src="../static/metabolism.png" width="30" height="30" alt="Logo">
+                            </td>
+                            <td>
+                                <div class="score-label">Metabolism</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="score-value" id="metabolism-score">-</div>
+                <div class="score-status" id="metabolism_status"></div>
+            </div>
+            <div class="score-box">
+                <table>
+                    <tr>
+                        <td width="20%" height="auto">
+                            <svg xmlns="http://www.w3.org/2000/svg"  width="30" height="30" fill="Green" class="bi bi-person-arms-up" viewBox="0 0 16 16">
+                                <path d="M8 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/>
+                                <path d="m5.93 6.704-.846 8.451a.768.768 0 0 0 1.523.203l.81-4.865a.59.59 0 0 1 1.165 0l.81 4.865a.768.768 0 0 0 1.523-.203l-.845-8.451A1.5 1.5 0 0 1 10.5 5.5L13 2.284a.796.796 0 0 0-1.239-.998L9.634 3.84a.7.7 0 0 1-.33.235c-.23.074-.665.176-1.304.176-.64 0-1.074-.102-1.305-.176a.7.7 0 0 1-.329-.235L4.239 1.286a.796.796 0 0 0-1.24.998l2.5 3.216c.317.316.475.758.43 1.204Z"/>
+                            </svg>
+                        </td>
+                        <td width="80%" height="auto">
+                            <div class="score-label">Health</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="score-value" id="health-score">-</div>
+                <div class="score-status" id="health_status"></div>
+            </div>
+            <div class="score-box">
+                <table>
+                    <tr>
+                        <td width="20%" height="auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="Green" viewBox="0 0 640 512">
+                                <path d="M64 160C64 89.3 121.3 32 192 32l256 0c70.7 0 128 57.3 128 128l0 33.6c-36.5 7.4-64 39.7-64 78.4l0 48-384 0 0-48c0-38.7-27.5-71-64-78.4L64 160zM544 272c0-20.9 13.4-38.7 32-45.3c5-1.8 10.4-2.7 16-2.7c26.5 0 48 21.5 48 48l0 176c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32L96 448c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32L0 272c0-26.5 21.5-48 48-48c5.6 0 11 1 16 2.7c18.6 6.6 32 24.4 32 45.3l0 48 0 32 32 0 384 0 32 0 0-32 0-48z"/>
+                            </svg>
+                        </td>
+                        <td width="80%" height="auto">
+                            <div class="score-label">Relaxation</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="score-value" id="relaxation-score">-</div>
+                <div class="score-status" id="relaxation_status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button id="backButton">Back</button>
+    </div>
+    <footer>
+        <p>&copy; 2024 Smart Logger</p>
+    </footer>
+    <script src="../static/script1.js"></script>
+</body>
+</html>

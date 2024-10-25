@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPPG Mesures Physiologiques</title>
+    <link rel="icon" href="../static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/style0.css">
+</head>
+<body>
+    <table width="100%" height="auto">
+        <tr width="100%" height="auto">
+            <td width="5%">
+                <div class="logo">
+                    <img src="../static/logo.png" alt="Logo">
+                </div>
+            </td>
+            <td width="95%">
+                <header>
+                    <h1>Face Heart Vitals</h1>
+                </header>
+            </td>
+        </tr>
+    </table>
+    <div class="container" id="page1">
+        <h2>Personel Informations</h2>
+        <label>Gender</label>
+        <div class="radio-group">
+            <label><input type="radio" name="gender" value="male" checked> Male</label>
+            <label><input type="radio" name="gender" value="female" style="margin-left:15px;"> Female</label>
+        </div>
+
+        <label>Age</label>
+        <input type="number" min="1" placeholder="Enter your Age" id="age">
+
+        <label>Weight</label>
+        <input type="number" min="1" placeholder="Enter your Weight (kg)" id="weight">
+
+        <label>Height</label>
+        <input type="number" min="10" placeholder="Enter your height (cm)" id="height">
+
+        <label>Camera</label>
+        <div class="camera-group">
+            <label><input type="radio" name="camera" value="front" checked> Front</label>
+            <label><input type="radio" name="camera" value="back" style="margin-left: 15px;"> Back</label>
+        </div>
+        <div class="buttons">
+            <button id="nextButton">Next</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Smart Logger</p>
+    </footer>
+    <script src="../static/script0.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# pip install -r requirements.txt
+
+flask
+flask-cors
+opencv-python
+numpy
+scipy
+socketio
+flask_socketio
+pillow
